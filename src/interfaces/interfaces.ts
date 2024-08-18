@@ -2,6 +2,7 @@ import { User } from 'firebase/auth';
 import { ReactNode } from 'react';
 import { UseFormRegister, RegisterOptions } from 'react-hook-form';
 import { TypeOptions } from 'react-toastify';
+import type { FieldValue, GeoPoint, Timestamp } from 'firebase/firestore';
 
 export interface BaseProps {
   children?: React.ReactNode;
@@ -62,4 +63,25 @@ export interface IToast {
   message: string;
   toast_type: TypeOptions;
   toast_theme: string;
+}
+
+export interface team {
+  name: string;
+  projectIds: [string];
+  referralCode: string;
+  phonenumber: string;
+  emailId: string;
+}
+export interface applications {
+  id: string;
+  createdAt: Timestamp;
+  email: string;
+  linkedin: string;
+  name: string;
+  phone: string;
+  referralCode: string;
+  referralCodeUsed: boolean;
+  resumeUrl: string;
+  role: string;
+  status?: string;
 }

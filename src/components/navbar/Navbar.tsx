@@ -14,8 +14,8 @@ const Navbar = () => {
         <Link to="/">
           <img
             className="h-[50px]"
-            src="/images/wb-100.png"
-            alt="WorkBuddy - Manage your tasks and todos easily"
+            src="/public/images/HorizonVIewLog.jpeg"
+            alt="HorizonView Admin"
           />
         </Link>
       </div>
@@ -39,6 +39,39 @@ const Navbar = () => {
               }
               to="/dashboard">
               Dashboard
+            </NavLink>
+          )}
+          {user && (
+            <NavLink
+              className={({ isActive }: { isActive: boolean }) =>
+                isActive
+                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
+                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
+              }
+              to="/employeeManagement">
+              Add Team
+            </NavLink>
+          )}
+          {user && (
+            <NavLink
+              className={({ isActive }: { isActive: boolean }) =>
+                isActive
+                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
+                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
+              }
+              to="/allemp">
+              Employee
+            </NavLink>
+          )}
+          {user && (
+            <NavLink
+              className={({ isActive }: { isActive: boolean }) =>
+                isActive
+                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
+                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
+              }
+              to="/allapplication">
+              Application
             </NavLink>
           )}
         </div>
@@ -83,6 +116,13 @@ const Navbar = () => {
                     to="/"
                     className="block px-4 py-2 text-sm text-darkgray hover:bg-primary dark:text-lightgray hover:text-light">
                     Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/signup"
+                    className="block px-4 py-2 text-sm text-darkgray hover:bg-primary dark:text-lightgray hover:text-light">
+                    Create Admin
                   </Link>
                 </li>
                 <li>
