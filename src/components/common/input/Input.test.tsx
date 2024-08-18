@@ -10,6 +10,7 @@ const RenderInput = () => {
   return (
     <Input
       label="Email"
+      type="email"
       name="email"
       reg={register}
       registerOptions={schema.email}

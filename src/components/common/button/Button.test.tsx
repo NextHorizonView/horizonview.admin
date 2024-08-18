@@ -4,7 +4,12 @@ import Button from './Button';
 
 describe('<Input /> rendering', () => {
   test('check in inputbox is rendering', () => {
-    render(<Button text="Sign In" />);
+    render(
+      <Button
+        text="Sign In"
+        type="submit"
+      />
+    );
     const button = screen.getByRole('button', { name: /sign in/i });
     expect(button).toBeInTheDocument();
   });
