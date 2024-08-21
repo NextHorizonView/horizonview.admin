@@ -66,11 +66,13 @@ export interface IToast {
 }
 
 export interface team {
+  id: team | null;
   name: string;
   projectIds: [string];
   referralCode: string;
   phonenumber: string;
   emailId: string;
+  role: string;
 }
 export interface applications {
   id: string;
@@ -83,5 +85,5 @@ export interface applications {
   referralCodeUsed: boolean;
   resumeUrl: string;
   role: string;
-  status?: string;
+  status?: 'approved' | 'rejected';
 }

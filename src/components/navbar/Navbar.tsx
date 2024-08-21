@@ -14,7 +14,7 @@ const Navbar = () => {
         <Link to="/">
           <img
             className="h-[50px]"
-            src="/public/images/HorizonVIewLog.jpeg"
+            src="/images/HorizonVIewLog.jpeg"
             alt="HorizonView Admin"
           />
         </Link>

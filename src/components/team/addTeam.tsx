@@ -7,6 +7,8 @@ const AddTeam: React.FC = () => {
   const [name, setName] = useState('');
   const [phonenumber, setPhonenumber] = useState('');
   const [emailId, setEmailId] = useState('');
+  const [role, setRole] = useState('');
+
   const [projectIds] = useState<string[]>([]); // Assuming an empty array initially
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,6 +23,7 @@ const AddTeam: React.FC = () => {
         referralCode,
         phonenumber,
         emailId,
+        role,
       });
       alert('Team added successfully');
     } catch (error) {
@@ -32,6 +35,7 @@ const AddTeam: React.FC = () => {
     setName('');
     setPhonenumber('');
     setEmailId('');
+    setRole('');
   };
 
   return (
@@ -75,6 +79,18 @@ const AddTeam: React.FC = () => {
               type="email"
               value={emailId}
               onChange={e => setEmailId(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-gray-100"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Role:
+            </label>
+            <input
+              type="text"
+              value={role}
+              onChange={e => setRole(e.target.value)}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-gray-100"
             />

@@ -21,9 +21,7 @@ const ApplicationsList: React.FC = () => {
     const fetchApplications = async () => {
       try {
         const applicationsCollection = collection(db, 'jobApplications');
-        const applicationsSnapshot: QuerySnapshot = await getDocs(
-          applicationsCollection
-        );
+        const applicationsSnapshot = await getDocs(applicationsCollection);
         const applicationsList = applicationsSnapshot.docs
           .map(doc => ({
             id: doc.id,
@@ -31,7 +29,9 @@ const ApplicationsList: React.FC = () => {
           }))
           .filter(
             application =>
-              !application.status || application.status !== 'approved'
+              !application.status ||
+              (application.status !== 'approved' &&
+                application.status !== 'rejected')
           );
         setApplications(applicationsList);
       } catch (error) {
@@ -73,7 +73,7 @@ const ApplicationsList: React.FC = () => {
 
   const handleReject = async (id: string) => {
     try {
-      const applicationRef = doc(db, 'applications', id);
+      const applicationRef = doc(db, 'jobApplications', id);
       await updateDoc(applicationRef, { status: 'rejected' });
       alert('Application rejected');
     } catch (error) {
@@ -82,7 +82,7 @@ const ApplicationsList: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 h-full">
       <h2 className="text-2xl font-bold mb-4">Applications</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {applications.map(application => (
