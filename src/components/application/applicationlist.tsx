@@ -6,8 +6,8 @@ import {
   updateDoc,
   doc,
   addDoc,
-  deleteDoc,
-  QuerySnapshot,
+  query,
+  orderBy,
 } from 'firebase/firestore';
 import { applications } from '../../interfaces/interfaces';
 import generateReferralCode from '../../utils/misc';
@@ -16,12 +16,17 @@ const ApplicationsList: React.FC = () => {
   const [applications, setApplications] = useState<applications[]>([]);
   const [selectedApplication, setSelectedApplication] =
     useState<applications | null>(null);
+  const [emailSent, setEmailSent] = useState(false); // Track the checkbox state
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         const applicationsCollection = collection(db, 'jobApplications');
-        const applicationsSnapshot = await getDocs(applicationsCollection);
+
+        // Query to order applications by 'createdAt' in descending order (newest first)
+        const applicationsQuery = query(applicationsCollection, orderBy('createdAt', 'desc'));
+
+        const applicationsSnapshot = await getDocs(applicationsQuery);
         const applicationsList = applicationsSnapshot.docs
           .map(doc => ({
             id: doc.id,
@@ -42,16 +47,28 @@ const ApplicationsList: React.FC = () => {
     fetchApplications();
   }, []);
 
+  // Handle email sent status
+  const handleEmailSentChange = async (id: string, checked: boolean) => {
+    try {
+      const applicationRef = doc(db, 'jobApplications', id);
+      await updateDoc(applicationRef, { EmailSend: checked });
+      setEmailSent(checked);
+      alert(`Email send status updated to: ${checked}`);
+    } catch (error) {
+      console.error('Error updating EmailSend status: ', error);
+      alert('Error during updating EmailSend status');
+    }
+  };
+
   const handleApprove = async (id: string, application: applications) => {
     try {
       const applicationRef = doc(db, 'jobApplications', id);
 
       // 1. Update the status to "approved"
       await updateDoc(applicationRef, { status: 'approved' });
-      const referralCode = generateReferralCode(
-        application.name,
-        application.phone
-      );
+
+      const referralCode = generateReferralCode(application.name, application.phone);
+
       // 2. Add the approved applicant to the "team" collection
       await addDoc(collection(db, 'team'), {
         name: application.name,
@@ -61,8 +78,8 @@ const ApplicationsList: React.FC = () => {
         emailId: application.email,
       });
 
-      // 3. Delete the application from the "applications" collection
-      //   await deleteDoc(applicationRef);
+      // 3. Optionally delete the application (if desired)
+      // await deleteDoc(applicationRef);
 
       alert('Application approved and added to the team');
     } catch (error) {
@@ -89,7 +106,10 @@ const ApplicationsList: React.FC = () => {
           <div
             key={application.id}
             className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md cursor-pointer"
-            onClick={() => setSelectedApplication(application)}>
+            onClick={() => {
+              setSelectedApplication(application);
+              setEmailSent(application.EmailSend || false); // Initialize the checkbox state
+            }}>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               {application.name}
             </h3>
@@ -101,6 +121,12 @@ const ApplicationsList: React.FC = () => {
             </p>
             <p className="text-gray-700 dark:text-gray-300">
               Referral Code: {application.referralCode}
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Date: {application.createdAt.toDate().toString()}
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Email Sent: {application.EmailSend ? "Bheja hai": "Nahi Bheja hai"}
             </p>
           </div>
         ))}
@@ -128,8 +154,7 @@ const ApplicationsList: React.FC = () => {
               Referral Code: {selectedApplication.referralCode}
             </p>
             <p className="text-gray-700 dark:text-gray-300">
-              Referral Code Used:{' '}
-              {selectedApplication.referralCodeUsed ? 'Yes' : 'No'}
+              Referral Code Used: {selectedApplication.referralCodeUsed ? 'Yes' : 'No'}
             </p>
             <p className="text-gray-700 dark:text-gray-300">
               Resume:{' '}
@@ -141,11 +166,25 @@ const ApplicationsList: React.FC = () => {
                 View Resume
               </a>
             </p>
+
+            {/* Checkbox for Email Sent Status */}
+            <div className="mt-4">
+              <label className="text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={emailSent}
+                  onChange={(e) =>
+                    handleEmailSentChange(selectedApplication.id!, e.target.checked)
+                  }
+                  className="mr-2"
+                />
+                Email Sent
+              </label>
+            </div>
+
             <div className="mt-4 flex justify-end space-x-4">
               <button
-                onClick={() =>
-                  handleApprove(selectedApplication.id!, selectedApplication)
-                }
+                onClick={() => handleApprove(selectedApplication.id!, selectedApplication)}
                 className="px-4 py-2 bg-green-500 text-white rounded-lg">
                 Approve
               </button>
