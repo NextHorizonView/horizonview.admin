@@ -81,14 +81,14 @@ const Login = () => {
                 />
               </div>
             </form>
-            <div className="px-5 dark:text-light text-dark text-[.8rem]">
+            {/* <div className="px-5 dark:text-light text-dark text-[.8rem]">
               Don&apos;t have an account{' '}
               <Link
                 className="text-primary font-semibold dark:bg-darkbg bg-lightgray px-2 rounded ml-1"
                 to="/signup">
                 Register here
               </Link>
-            </div>
+            </div> */}
             <div className="mt-5 text-dark dark:text-light mx-5">
               {/* <p className="text-xs w-full h-[1px] relative bg-dark dark:bg-light">
                 <span className="absolute left-1/2 -translate-x-1/2 top-1/2 p-1 bg-lightgray rounded dark:bg-dark -translate-y-1/2">
