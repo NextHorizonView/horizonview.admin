@@ -90,12 +90,12 @@ const Login = () => {
               </Link>
             </div>
             <div className="mt-5 text-dark dark:text-light mx-5">
-              <p className="text-xs w-full h-[1px] relative bg-dark dark:bg-light">
+              {/* <p className="text-xs w-full h-[1px] relative bg-dark dark:bg-light">
                 <span className="absolute left-1/2 -translate-x-1/2 top-1/2 p-1 bg-lightgray rounded dark:bg-dark -translate-y-1/2">
                   OR
                 </span>
-              </p>
-              <div className="flex justify-center mt-7">
+              </p> */}
+              {/* <div className="flex justify-center mt-7">
                 <div className="login-button">
                   <button
                     className="login-provider-button text-primary transition-all shadow-sm shadow-light dark:shadow-dark duration-150 hover:bg-primary hover:text-lightgray text-2xl flex border-primary hover:border-2 hover:border-lightgray border-2 p-2 rounded-full"
@@ -125,7 +125,7 @@ const Login = () => {
                     </span>
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

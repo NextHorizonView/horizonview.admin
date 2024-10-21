@@ -9,7 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { User, onAuthStateChanged } from 'firebase/auth';
 
-import { firebaseAuth } from '../../firebase/BaseConfig';
+import { firebaseAuth, db } from '../../firebase/BaseConfig';
 import {
   BaseProps,
   IAuth,
@@ -20,6 +20,8 @@ import TAuth from '../../firebase/services/AuthServices';
 import swal from '../../utils/swal';
 import { alertType } from '../../utils/constants';
 import PageLoading from '../../pages/loading/PageLoading';
+import { doc, getDoc } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 
 const AuthContext = createContext<IAuth>({
   user: firebaseAuth.currentUser,
@@ -85,67 +87,75 @@ const AuthProvider = ({ children }: BaseProps) => {
       });
   }, []);
 
+
   const SignIn = useCallback(
     async (creds: LoginFormValues, onSuccess: () => void) => {
       setIsLoading(true);
-      TAuth.SignIn(creds)
-        .then(userCredential => {
-          const { user } = userCredential;
-          if (user) {
-            setCurrentUser(user);
-            onSuccess();
+      try {
+        const { result } = await TAuth.SignIn(creds); // Get result from SignIn function
+        const { user } = result;
+  
+        if (user) {
+          // Check if the user's UID exists in the 'admins' collection
+          const adminDocRef = doc(db, 'admins', user.uid);
+          const adminDoc = await getDoc(adminDocRef);
+  
+          if (adminDoc.exists()) {
+            console.log('User is an admin');
+            setCurrentUser(user); // Set the user if admin
+            onSuccess(); // Proceed with successful login
           } else {
             swal.showAlert(
               'Error',
-              'Something went wrong!',
+              'Access denied! You are not an admin.',
               'Ok',
               alertType.ERROR
             );
+            await TAuth.SignOut(); // Immediately sign out non-admin users
           }
-          setIsLoading(false);
-        })
-        .catch(error => {
-          if (error.code === 'auth/wrong-password') {
-            swal.showAlert(
-              'Error',
-              'Password is wrong!',
-              'Ok',
-              alertType.ERROR
-            );
-          } else if (error.code === 'auth/too-many-requests') {
-            swal.showAlert(
-              'Error',
-              'Account disabled! Too many attempts!',
-              'Ok',
-              alertType.ERROR
-            );
-          }
-          setIsLoading(false);
-        });
+        } else {
+          swal.showAlert('Error', 'Something went wrong!', 'Ok', alertType.ERROR);
+        }
+      } catch (err) {
+        const error = err as FirebaseError; // Typecast to FirebaseError
+  
+        if (error.code === 'auth/wrong-password') {
+          swal.showAlert('Error', 'Password is wrong!', 'Ok', alertType.ERROR);
+        } else if (error.code === 'auth/too-many-requests') {
+          swal.showAlert(
+            'Error',
+            'Account disabled! Too many attempts!',
+            'Ok',
+            alertType.ERROR
+          );
+        } else {
+          swal.showAlert('Error', error.message, 'Ok', alertType.ERROR);
+        }
+      } finally {
+        setIsLoading(false);
+      }
     },
     []
   );
-
+  
+  
+  
   const LoginWithGoogle = (onSuccess: () => void) => {
     TAuth.SignInWithGoogle()
-      .then(userCredentials => {
-        const { user } = userCredentials;
+      .then(({ result }) => { // Destructure to get result
+        const { user } = result; // Extract user from UserCredential
         if (user) {
           setCurrentUser(user);
           onSuccess();
         } else {
-          swal.showAlert(
-            'Error',
-            'Something went wrong!',
-            'Ok',
-            alertType.ERROR
-          );
+          swal.showAlert('Error', 'Something went wrong!', 'Ok', alertType.ERROR);
         }
       })
       .catch(error => {
         swal.showAlert('Error', error.message, 'Ok', alertType.ERROR);
       });
   };
+  
 
   const SignOut = useCallback(async () => {
     setIsLoading(true);
