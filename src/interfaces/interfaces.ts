@@ -86,5 +86,7 @@ export interface applications {
   resumeUrl: string;
   role: string;
   status?: 'approved' | 'rejected';
-  EmailSend: boolean
+  EmailSend: boolean,
+  approveforinterview: boolean
+
 }

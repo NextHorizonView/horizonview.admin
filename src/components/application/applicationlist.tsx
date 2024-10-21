@@ -18,12 +18,15 @@ const ApplicationsList: React.FC = () => {
   const [selectedApplication, setSelectedApplication] =
     useState<applications | null>(null);
   const [emailSent, setEmailSent] = useState(false);
+  const [interviewApproved, setInterviewApproved] = useState(false); // New state for interview approval
+  const [referralCodeFilter, setReferralCodeFilter] = useState<string>(''); // State for referralCode filter
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // State for sort order
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         const applicationsCollection = collection(db, 'jobApplications');
-        const applicationsQuery = query(applicationsCollection, orderBy('createdAt', 'desc'));
+        const applicationsQuery = query(applicationsCollection, orderBy('createdAt', sortOrder));
         const applicationsSnapshot = await getDocs(applicationsQuery);
 
         const applicationsList = applicationsSnapshot.docs
@@ -33,9 +36,11 @@ const ApplicationsList: React.FC = () => {
           }))
           .filter(
             (application) =>
-              !application.status ||
-              (application.status !== 'approved' && application.status !== 'rejected')
+              (!application.status ||
+                (application.status !== 'approved' && application.status !== 'rejected')) &&
+              (!referralCodeFilter || application.referralCode.includes(referralCodeFilter)) // Filter by referralCode
           );
+
         setApplications(applicationsList);
       } catch (error) {
         console.error('Error fetching applications: ', error);
@@ -43,7 +48,7 @@ const ApplicationsList: React.FC = () => {
     };
 
     fetchApplications();
-  }, []);
+  }, [referralCodeFilter, sortOrder]); // Add filters and sortOrder to dependencies
 
   const handleEmailSentChange = async (id: string, checked: boolean) => {
     try {
@@ -54,6 +59,16 @@ const ApplicationsList: React.FC = () => {
     } catch (error) {
       console.error('Error updating EmailSend status: ', error);
       alert('Error during updating EmailSend status');
+    }
+  };
+
+  const handleApproveForInterview = async (id: string, approved: boolean) => {
+    try {
+      const applicationRef = doc(db, 'jobApplications', id);
+      await updateDoc(applicationRef, { approveforinterview: approved }); // Set to true or false based on the checkbox state
+      alert(`Application ${approved ? 'approved' : 'disapproved'} for interview`);
+    } catch (error) {
+      console.error('Error approving application for interview: ', error);
     }
   };
 
@@ -105,6 +120,29 @@ const ApplicationsList: React.FC = () => {
         className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg">
         Download Excel
       </button>
+
+      <div className="mb-4">
+        <label className="mr-2">Filter by Referral Code:</label>
+        <input
+          type="text"
+          value={referralCodeFilter}
+          onChange={(e) => setReferralCodeFilter(e.target.value)}
+          className="border rounded px-2 py-1 bg-gray-500"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="mr-2">Sort by Date:</label>
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+          className="border rounded px-2 py-1 bg-gray-500"
+        >
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {applications.map((application) => (
           <div
@@ -113,6 +151,7 @@ const ApplicationsList: React.FC = () => {
             onClick={() => {
               setSelectedApplication(application);
               setEmailSent(application.EmailSend || false);
+              setInterviewApproved(application.approveforinterview || false); // Set the checkbox state
             }}>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               {application.name}
@@ -139,9 +178,22 @@ const ApplicationsList: React.FC = () => {
               {selectedApplication.name}
             </h3>
             <p className="text-gray-700 dark:text-gray-300">Role: {selectedApplication.role}</p>
-            <p className="text-gray-700 dark:text-gray-300">Email: {selectedApplication.email}</p>
+            <p className="text-gray-700 dark:text-gray-300">
+  Email: 
+  <a
+    href={`mailto:${selectedApplication.email}`}
+    className="text-blue-500">
+    Open Email
+  </a>
+</p>
             <p className="text-gray-700 dark:text-gray-300">Phone: {selectedApplication.phone}</p>
-            <p className="text-gray-700 dark:text-gray-300">LinkedIn: {selectedApplication.linkedin}</p>
+            <p className="text-gray-700 dark:text-gray-300">LinkedIn:  <a
+                href={selectedApplication.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500">
+                View LinkedIn
+              </a></p>
             <p className="text-gray-700 dark:text-gray-300">
               Referral Code Used: {selectedApplication.referralCodeUsed ? 'Yes' : 'No'}
             </p>
@@ -168,15 +220,31 @@ const ApplicationsList: React.FC = () => {
                 Email Sent
               </label>
             </div>
-            <div className="mt-4 flex justify-end space-x-4">
+            <div className="mt-4">
+              <label className="text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={interviewApproved}
+                  onChange={(e) => setInterviewApproved(e.target.checked)}
+                  className="mr-2"
+                />
+                Approve for Interview
+              </label>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={() => handleApproveForInterview(selectedApplication.id!, interviewApproved)} // Call with the current interviewApproved state
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                Confirm Interview
+              </button>
               <button
                 onClick={() => handleApprove(selectedApplication.id!, selectedApplication)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg">
+                className="ml-2 px-4 py-2 bg-green-500 text-white rounded-lg">
                 Approve
               </button>
               <button
                 onClick={() => handleReject(selectedApplication.id!)}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg">
+                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg">
                 Reject
               </button>
             </div>
