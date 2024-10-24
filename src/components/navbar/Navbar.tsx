@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { RiLoginCircleFill } from 'react-icons/ri';
-
+import { RiLoginCircleFill, RiMenu3Line, RiCloseLine } from 'react-icons/ri';
 import ThemeSwitch from '../theme-switch/ThemeSwitch';
 import { useAuth } from '../../store/auth-context/AuthContext';
 
 const Navbar = () => {
   const { user, SignOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <nav className="flex px-2 lg:px-8 bg-light shadow-sm dark:shadow-dark-bg dark:bg-dark py-4 items-center text-darkgray dark:text-light">
-      <div>
+    <nav className="flex items-center justify-between px-4 lg:px-8 bg-light shadow-sm dark:shadow-dark-bg dark:bg-dark py-4 text-darkgray dark:text-light">
+      {/* Logo Section */}
+      <div className="flex items-center">
         <Link to="/">
           <img
             className="h-[50px]"
@@ -19,134 +21,143 @@ const Navbar = () => {
           />
         </Link>
       </div>
-      <div className="flex ml-auto items-center">
-        <div className="mx-3 mr-20 flex self-center">
+
+      {/* Hamburger Menu Button for Mobile */}
+      <button
+        className="lg:hidden text-2xl"
+        onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        aria-label="Toggle Menu"
+      >
+        {isMobileMenuOpen ? <RiCloseLine /> : <RiMenu3Line />}
+      </button>
+
+      {/* Links Section (Desktop & Mobile) */}
+      <div
+        className={`${
+          isMobileMenuOpen ? 'block' : 'hidden'
+        } absolute top-[70px] left-0 w-full lg:w-auto lg:static lg:flex lg:items-center lg:space-x-4 bg-light dark:bg-dark lg:bg-transparent`}
+      >
+        <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-4 lg:space-y-0 lg:space-x-6 mt-4 lg:mt-0">
           <NavLink
-            className={({ isActive }: { isActive: boolean }) =>
+            className={({ isActive }) =>
               isActive
-                ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
-                : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
+                ? 'text-warning font-light'
+                : 'text-darkgray dark:text-light font-light'
             }
-            to="/">
+            to="/"
+          >
             Home
           </NavLink>
           {user && (
-            <NavLink
-              className={({ isActive }: { isActive: boolean }) =>
-                isActive
-                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
-                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
-              }
-              to="/dashboard">
-              Dashboard
-            </NavLink>
-          )}
-          {user && (
-            <NavLink
-              className={({ isActive }: { isActive: boolean }) =>
-                isActive
-                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
-                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
-              }
-              to="/employeeManagement">
-              Add Team
-            </NavLink>
-          )}
-          {user && (
-            <NavLink
-              className={({ isActive }: { isActive: boolean }) =>
-                isActive
-                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
-                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
-              }
-              to="/allemp">
-              Employee
-            </NavLink>
-          )}
-          {user && (
-            <NavLink
-              className={({ isActive }: { isActive: boolean }) =>
-                isActive
-                  ? 'group text-sm transition-transform duration-150 flex items-center font-light text-warning px-2 py-1 rounded'
-                  : 'group text-sm transition-transform duration-150 flex items-center font-light text-darkgray dark:text-light px-2 py-1 rounded'
-              }
-              to="/allapplication">
-              Application
-            </NavLink>
+            <>
+              <NavLink
+                className={({ isActive }) =>
+                  isActive
+                    ? 'text-warning font-light'
+                    : 'text-darkgray dark:text-light font-light'
+                }
+                to="/dashboard"
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                className={({ isActive }) =>
+                  isActive
+                    ? 'text-warning font-light'
+                    : 'text-darkgray dark:text-light font-light'
+                }
+                to="/employeeManagement"
+              >
+                Add Team
+              </NavLink>
+              <NavLink
+                className={({ isActive }) =>
+                  isActive
+                    ? 'text-warning font-light'
+                    : 'text-darkgray dark:text-light font-light'
+                }
+                to="/allemp"
+              >
+                Employee
+              </NavLink>
+              <NavLink
+                className={({ isActive }) =>
+                  isActive
+                    ? 'text-warning font-light'
+                    : 'text-darkgray dark:text-light font-light'
+                }
+                to="/allapplication"
+              >
+                Application
+              </NavLink>
+            </>
           )}
         </div>
-        <ThemeSwitch />
-        {user ? (
-          <div className="ml-3 relative">
-            <button
-              type="button"
-              onClick={() => setShowUserMenu(value => !value)}
-              className="flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-              id="user-menu-button"
-              data-testid="user-menu-button"
-              aria-expanded="false"
-              data-dropdown-toggle="user-dropdown"
-              data-dropdown-placement="bottom">
-              <span className="sr-only">Open user menu</span>
-              <img
-                className="w-8 h-8 rounded-full"
-                src={user.photoURL ? user.photoURL : '/images/user.webp'}
-                alt={user.displayName ? user.displayName : 'User'}
-              />
-            </button>
-            <div
-              className={`z-50 absolute right-full translate-x-9 top-5 ${
-                !showUserMenu && 'hidden'
-              } my-4 text-base list-none bg-light divide-y divide-lightgray rounded-lg shadow dark:bg-darkgray border border-primary dark:divide-gray-600`}
-              id="user-dropdown"
-              data-testid="user-dropdown">
-              <div className="px-4 py-3">
-                <span className="block text-sm text-darkgray w-max dark:text-light">
-                  {user.displayName || 'Bonnie Green'}
-                </span>
-                <span className="block mt-1 text-sm font-medium text-darkbg shadow-sm truncate dark:text-lightgray">
-                  {user.email}
-                </span>
-              </div>
-              <ul
-                className="py-2"
-                aria-labelledby="user-menu-button">
-                <li>
-                  <Link
-                    to="/"
-                    className="block px-4 py-2 text-sm text-darkgray hover:bg-primary dark:text-lightgray hover:text-light">
-                    Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/signup"
-                    className="block px-4 py-2 text-sm text-darkgray hover:bg-primary dark:text-lightgray hover:text-light">
-                    Create Admin
-                  </Link>
-                </li>
-                <li>
-                  <button
-                    onClick={SignOut}
-                    className="block px-4 py-2 w-full text-left text-sm text-darkgray hover:bg-primary dark:text-lightgray hover:text-light">
-                    Sign out
-                  </button>
-                </li>
-              </ul>
+
+        <div className="mt-4 lg:mt-0 lg:ml-auto flex items-center space-x-4">
+          <ThemeSwitch />
+          {user ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowUserMenu((value) => !value)}
+                className="flex text-sm rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+              >
+                <span className="sr-only">Open user menu</span>
+                <img
+                  className="w-8 h-8 rounded-full"
+                  src={user.photoURL ? user.photoURL : '/images/user.webp'}
+                  alt={user.displayName || 'User'}
+                />
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-light dark:bg-darkgray rounded-lg shadow-lg">
+                  <div className="px-4 py-3">
+                    <p className="text-sm text-darkgray dark:text-light">
+                      {user.displayName || 'Bonnie Green'}
+                    </p>
+                    <p className="text-sm font-medium text-darkbg dark:text-lightgray">
+                      {user.email}
+                    </p>
+                  </div>
+                  <ul className="py-2">
+                    <li>
+                      <Link
+                        to="/"
+                        className="block px-4 py-2 text-sm hover:bg-primary dark:hover:bg-gray-700"
+                      >
+                        Profile
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/signup"
+                        className="block px-4 py-2 text-sm hover:bg-primary dark:hover:bg-gray-700"
+                      >
+                        Create Admin
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={SignOut}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-primary dark:hover:bg-gray-700"
+                      >
+                        Sign out
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
-          </div>
-        ) : (
-          <div className="mx-3">
+          ) : (
             <Link
-              className="bg-primary group transition-transform duration-150 flex items-center font-light hover:bg-secondary text-light px-4 py-2 rounded"
-              to="/signin">
-              Sign In{' '}
-              <span className="ml-1 group-hover:translate-x-1 transition-transform duration-150">
-                <RiLoginCircleFill />
-              </span>
+              to="/signin"
+              className="bg-primary text-light px-4 py-2 rounded hover:bg-secondary"
+            >
+              Sign In <RiLoginCircleFill className="ml-1 inline" />
             </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </nav>
   );

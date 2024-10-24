@@ -11,8 +11,10 @@ import { team } from '../../interfaces/interfaces';
 
 const TeamList: React.FC = () => {
   const [teams, setTeams] = useState<team[]>([]);
+  const [filteredTeams, setFilteredTeams] = useState<team[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedTeam, setEditedTeam] = useState<team | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -23,6 +25,7 @@ const TeamList: React.FC = () => {
           doc => ({ ...doc.data(), id: doc.id } as unknown as team)
         );
         setTeams(teamList);
+        setFilteredTeams(teamList); // Initialize filtered teams
       } catch (error) {
         console.error('Error fetching teams: ', error);
       }
@@ -31,9 +34,23 @@ const TeamList: React.FC = () => {
     fetchTeams();
   }, []);
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setFilteredTeams(teams); // Reset if search is empty
+    } else {
+      const filtered = teams.filter(
+        team =>
+          team.name.toLowerCase().includes(query.toLowerCase()) ||
+          team.emailId.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredTeams(filtered);
+    }
+  };
+
   const handleEditClick = (index: number) => {
     setEditingIndex(index);
-    setEditedTeam({ ...teams[index] });
+    setEditedTeam({ ...filteredTeams[index] });
   };
 
   const handleInputChange = (
@@ -65,6 +82,7 @@ const TeamList: React.FC = () => {
         const updatedTeams = [...teams];
         updatedTeams[editingIndex!] = editedTeam;
         setTeams(updatedTeams);
+        setFilteredTeams(updatedTeams);
 
         // Reset editing state
         setEditingIndex(null);
@@ -81,6 +99,7 @@ const TeamList: React.FC = () => {
     setEditingIndex(null);
     setEditedTeam(null);
   };
+
   const handleDeleteClick = async (id: any, index: number) => {
     const confirmed = window.confirm(
       'Are you sure you want to delete this team member?'
@@ -95,6 +114,7 @@ const TeamList: React.FC = () => {
         const updatedTeams = [...teams];
         updatedTeams.splice(index, 1);
         setTeams(updatedTeams);
+        setFilteredTeams(updatedTeams);
       } catch (error) {
         console.error('Error deleting team member: ', error);
       }
@@ -104,11 +124,22 @@ const TeamList: React.FC = () => {
   return (
     <div className="flex flex-col items-center">
       <h2 className="text-2xl font-bold mb-4">Team Members</h2>
+
+      {/* Search Bar */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={e => handleSearch(e.target.value)}
+        placeholder="Search by name or email"
+        className="w-full max-w-lg mb-6 p-2 border border-gray-300 rounded text-black"
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
-        {teams.map((team, index) => (
+        {filteredTeams.map((team, index) => (
           <div
             key={index}
-            className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+            className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md"
+          >
             {editingIndex === index ? (
               <div>
                 <input
@@ -143,12 +174,14 @@ const TeamList: React.FC = () => {
                 />
                 <button
                   onClick={handleSaveClick}
-                  className="bg-green-500 text-white px-4 py-2 rounded mr-2">
+                  className="bg-green-500 text-white px-4 py-2 rounded mr-2"
+                >
                   Save
                 </button>
                 <button
                   onClick={handleCancelClick}
-                  className="bg-red-500 text-white px-4 py-2 rounded">
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                >
                   Cancel
                 </button>
               </div>
@@ -178,12 +211,14 @@ const TeamList: React.FC = () => {
                 <div className="flex justify-between">
                   <button
                     onClick={() => handleEditClick(index)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded">
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteClick(team!.id, index)}
-                    className="bg-red-500 text-white px-4 py-2 rounded">
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                  >
                     Delete
                   </button>
                 </div>
