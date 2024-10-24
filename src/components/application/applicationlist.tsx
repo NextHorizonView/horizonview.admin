@@ -15,15 +15,22 @@ import * as XLSX from 'xlsx'; // Import the XLSX library
 
 const ApplicationsList: React.FC = () => {
   const [applications, setApplications] = useState<applications[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<applications[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<applications | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<applications | null>(null);
   const [emailSent, setEmailSent] = useState(false);
-  const [interviewApproved, setInterviewApproved] = useState(false);
-  const [referralCodeFilter, setReferralCodeFilter] = useState<string>(''); 
-  const [searchQuery, setSearchQuery] = useState<string>(''); // New state for search query
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); 
-
-  // Fetch applications from Firestore
+  const [interviewApproved, setInterviewApproved] = useState(false); // New state for interview approval
+  const [referralCodeFilter, setReferralCodeFilter] = useState<string>(''); // State for referralCode filter
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // State for sort order
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filteredApplications, setFilteredApplications] = useState<applications[]>([]);
+  useEffect(() => {
+    const filtered = applications.filter((application) =>
+      application.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      application.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      application.role.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredApplications(filtered);
+  }, [searchQuery, applications]);
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -53,17 +60,6 @@ const ApplicationsList: React.FC = () => {
     fetchApplications();
   }, [referralCodeFilter, sortOrder]); 
 
-  // Filter applications based on the search query
-  useEffect(() => {
-    const filtered = applications.filter((application) =>
-      application.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      application.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      application.role.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredApplications(filtered);
-  }, [searchQuery, applications]); // Runs whenever the search query or applications change
-
-  // Handle Email Sent Status
   const handleEmailSentChange = async (id: string, checked: boolean) => {
     try {
       const applicationRef = doc(db, 'jobApplications', id);
@@ -72,21 +68,20 @@ const ApplicationsList: React.FC = () => {
       alert(`Email send status updated to: ${checked}`);
     } catch (error) {
       console.error('Error updating EmailSend status: ', error);
+      alert('Error during updating EmailSend status');
     }
   };
 
-  // Approve Application for Interview
   const handleApproveForInterview = async (id: string, approved: boolean) => {
     try {
       const applicationRef = doc(db, 'jobApplications', id);
-      await updateDoc(applicationRef, { approveforinterview: approved });
+      await updateDoc(applicationRef, { approveforinterview: approved }); // Set to true or false based on the checkbox state
       alert(`Application ${approved ? 'approved' : 'disapproved'} for interview`);
     } catch (error) {
-      console.error('Error approving for interview: ', error);
+      console.error('Error approving application for interview: ', error);
     }
   };
 
-  // Approve Application
   const handleApprove = async (id: string, application: applications) => {
     try {
       const applicationRef = doc(db, 'jobApplications', id);
@@ -104,10 +99,10 @@ const ApplicationsList: React.FC = () => {
       alert('Application approved and added to the team');
     } catch (error) {
       console.error('Error approving application: ', error);
+      alert('Error during the approval process');
     }
   };
 
-  // Reject Application
   const handleReject = async (id: string) => {
     try {
       const applicationRef = doc(db, 'jobApplications', id);
@@ -118,11 +113,12 @@ const ApplicationsList: React.FC = () => {
     }
   };
 
-  // Download Excel File
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(applications);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+
+    // Generate a download
     XLSX.writeFile(workbook, 'applications.xlsx');
   };
 
@@ -134,17 +130,6 @@ const ApplicationsList: React.FC = () => {
         className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg">
         Download Excel
       </button>
-
-      <div className="mb-4">
-        <label className="mr-2">Filter by Referral Code:</label>
-        <input
-          type="text"
-          value={referralCodeFilter}
-          onChange={(e) => setReferralCodeFilter(e.target.value)}
-          className="border rounded px-2 py-1 bg-gray-500"
-        />
-      </div>
-
       <div className="mb-4">
         <label className="mr-2">Search:</label>
         <input
@@ -153,6 +138,16 @@ const ApplicationsList: React.FC = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="border rounded px-2 py-1 bg-gray-500"
           placeholder="Search by name, email, or role"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="mr-2">Filter by Referral Code:</label>
+        <input
+          type="text"
+          value={referralCodeFilter}
+          onChange={(e) => setReferralCodeFilter(e.target.value)}
+          className="border rounded px-2 py-1 bg-gray-500"
         />
       </div>
 
@@ -176,7 +171,7 @@ const ApplicationsList: React.FC = () => {
             onClick={() => {
               setSelectedApplication(application);
               setEmailSent(application.EmailSend || false);
-              setInterviewApproved(application.approveforinterview || false);
+              setInterviewApproved(application.approveforinterview || false); // Set the checkbox state
             }}>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               {application.name}
@@ -188,6 +183,9 @@ const ApplicationsList: React.FC = () => {
             </p>
             <p className="text-gray-700 dark:text-gray-300">
               Date: {application.createdAt.toDate().toString()}
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Email Sent: {application.EmailSend ? 'Bheja hai' : 'Nahi Bheja hai'}
             </p>
           </div>
         ))}
@@ -201,16 +199,80 @@ const ApplicationsList: React.FC = () => {
             </h3>
             <p className="text-gray-700 dark:text-gray-300">Role: {selectedApplication.role}</p>
             <p className="text-gray-700 dark:text-gray-300">
-              Email: 
-              <a href={`mailto:${selectedApplication.email}`} className="text-blue-500">
-                Send Email
+  Email: 
+  <a
+    href={`mailto:${selectedApplication.email}`}
+    className="text-blue-500">
+    Open Email
+  </a>
+</p>
+            <p className="text-gray-700 dark:text-gray-300">Phone: {selectedApplication.phone}</p>
+            <p className="text-gray-700 dark:text-gray-300">LinkedIn:  <a
+                href={selectedApplication.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500">
+                View LinkedIn
+              </a></p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Referral Code Used: {selectedApplication.referralCodeUsed ? 'Yes' : 'No'}
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Resume:{' '}
+              <a
+                href={selectedApplication.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500">
+                View Resume
               </a>
             </p>
             <div className="mt-4">
-              <button onClick={() => setSelectedApplication(null)} className="px-4 py-2 bg-gray-500 text-white rounded-lg">
-                Close
+              <label className="text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={emailSent}
+                  onChange={(e) =>
+                    handleEmailSentChange(selectedApplication.id!, e.target.checked)
+                  }
+                  className="mr-2"
+                />
+                Email Sent
+              </label>
+            </div>
+            <div className="mt-4">
+              <label className="text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={interviewApproved}
+                  onChange={(e) => setInterviewApproved(e.target.checked)}
+                  className="mr-2"
+                />
+                Approve for Interview
+              </label>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={() => handleApproveForInterview(selectedApplication.id!, interviewApproved)} // Call with the current interviewApproved state
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                Confirm Interview
+              </button>
+              <button
+                onClick={() => handleApprove(selectedApplication.id!, selectedApplication)}
+                className="ml-2 px-4 py-2 bg-green-500 text-white rounded-lg">
+                Approve
+              </button>
+              <button
+                onClick={() => handleReject(selectedApplication.id!)}
+                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg">
+                Reject
               </button>
             </div>
+            <button
+              onClick={() => setSelectedApplication(null)}
+              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg">
+              Close
+            </button>
           </div>
         </div>
       )}
